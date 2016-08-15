@@ -96,7 +96,7 @@ func run(c *cli.Context) error {
 		Endpoint:    c.String("endpoint"),
 		Key:         c.String("access-key"),
 		Secret:      c.String("secret-key"),
-		Container:   c.String("continer"),
+		Container:   c.String("container"),
 		AuthVersion: c.Int("auth-version"),
 		Region:      c.String("region"),
 		Tenant:      c.String("tenant"),

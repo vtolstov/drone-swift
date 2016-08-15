@@ -126,7 +126,7 @@ func (p *Plugin) Exec() error {
 		}
 		defer fr.Close()
 
-		fw, err := conn.ObjectCreate(p.Container, target, true, "", content, nil)
+		fw, err := conn.ObjectCreate(p.Container, target, false, "", content, nil)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"name":      match,
