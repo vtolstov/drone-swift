@@ -170,6 +170,9 @@ func matches(include string, exclude []string) ([]string, error) {
 		return nil, err
 	}
 	if len(exclude) == 0 {
+		if len(matches) < 1 {
+			return nil, os.ErrNotExist
+		}
 		return matches, nil
 	}
 
@@ -194,6 +197,11 @@ func matches(include string, exclude []string) ([]string, error) {
 		}
 		included = append(included, include)
 	}
+
+	if len(included) < 1 {
+		return nil, os.ErrNotExist
+	}
+
 	return included, nil
 }
 
