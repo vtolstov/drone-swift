@@ -12,7 +12,7 @@ import (
 	"github.com/ncw/swift"
 )
 
-// Plugin defines the S3 plugin parameters.
+// Plugin defines the swift plugin parameters.
 type Plugin struct {
 	Endpoint    string
 	Key         string
@@ -65,7 +65,7 @@ func (p *Plugin) Exec() error {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,
-		}).Error("Could not match files")
+		}).Error("Could not auth")
 		return err
 	}
 
