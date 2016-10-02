@@ -65,10 +65,7 @@ func (p *Plugin) Exec() error {
 	log.WithFields(log.Fields{
     "auth-url": p.Endpoint,
     "auth-version":    p.AuthVersion,
-    "access-key":  p.Key,
-    "access-token": p.Secret,
   }).Info("Attempting to auth")
-
 
 	err := conn.Authenticate()
 	if err != nil {
