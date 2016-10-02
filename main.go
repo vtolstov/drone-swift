@@ -1,24 +1,24 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strings"
-
-	"github.com/codegangsta/cli"
-	_ "github.com/joho/godotenv/autoload"
+  "fmt"
+  "github.com/Sirupsen/logrus"
+  "github.com/urfave/cli"
+	"github.com/joho/godotenv"
 )
 
-var version string // build number set at compile-time
+var build = "0" // build number set at compile-time
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "swift artifact plugin"
 	app.Usage = "swift artifact plugin"
 	app.Action = run
-	app.Version = version
-	app.Flags = []cli.Flag{
+	app.Version = fmt.Sprintf("1.0.%s", build)
 
+	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:   "endpoint",
 			Usage:  "endpoint for auth the swift connection",
@@ -84,15 +84,23 @@ func main() {
 			Usage:  "dry run for debug purposes",
 			EnvVar: "PLUGIN_DRY_RUN",
 		},
+		cli.StringFlag{
+      Name:  "env-file",
+      Usage: "source env file",
+    },
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 }
 
 func run(c *cli.Context) error {
-	plugin := Plugin{
+  if c.String("env-file") != "" {
+    _ = godotenv.Load(c.String("env-file"))
+  }
+
+	plugin := &Plugin{
 		Endpoint:    c.String("endpoint"),
 		Key:         c.String("access-key"),
 		Secret:      c.String("secret-key"),
