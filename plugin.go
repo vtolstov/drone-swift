@@ -54,6 +54,7 @@ func (p *Plugin) Exec() error {
 		UserName: p.Key,
 		ApiKey:   p.Secret,
 		AuthUrl:  p.Endpoint,
+    AuthVersion: p.AuthVersion,
 	}
 
 	if p.AuthVersion > 1 {
