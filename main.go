@@ -49,6 +49,11 @@ func main() {
 			Usage:  "swift region",
 			EnvVar: "PLUGIN_REGION",
 		},
+    cli.StringFlag{
+      Name:   "timeout",
+      Usage:  "timeout",
+      EnvVar: "PLUGIN_TIMEOUT",
+    },
 		cli.StringFlag{
 			Name:   "tenant",
 			Usage:  "swift tenant",
@@ -102,6 +107,7 @@ func run(c *cli.Context) error {
 
 	plugin := &Plugin{
 		Endpoint:    c.String("endpoint"),
+    Timeout:     c.String("timeout"),
 		Key:         c.String("access-key"),
 		Secret:      c.String("secret-key"),
 		Container:   c.String("container"),

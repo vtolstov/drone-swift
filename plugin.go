@@ -21,6 +21,7 @@ type Plugin struct {
 	AuthVersion int
 	Region      string
 	Tenant      string
+	Timeout     string
 	// Copies the files from the specified directory.
 	// Regexp matching will apply to match multiple
 	// files
@@ -62,6 +63,11 @@ func (p *Plugin) Exec() error {
 		conn.Tenant = p.Tenant
 	}
 
+  if td, err := time.ParseDuration(p.Timeout); err == nil {
+    conn.ConnectTimeout = td
+    conn.Timeout = td
+  }
+
 	log.WithFields(log.Fields{
     "auth-url": p.Endpoint,
     "auth-version":    p.AuthVersion,
@@ -102,9 +108,9 @@ func (p *Plugin) Exec() error {
 		}
 
 		target := filepath.Join(p.Target, strings.TrimPrefix(match, p.StripPrefix))
-		if !strings.HasPrefix(target, "/") {
-			target = "/" + target
-		}
+    //if !strings.HasPrefix(target, "/") {
+		//	target = "/" + target
+		//}
 
 		content := contentType(match)
 
