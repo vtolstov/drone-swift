@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
+  "time"
 	log "github.com/Sirupsen/logrus"
 	"github.com/mattn/go-zglob"
 	"github.com/ncw/swift"
