@@ -1,0 +1,8 @@
+package: .
+import:
+- package: github.com/joho/godotenv
+  subpackages:
+  - autoload
+- package: github.com/mattn/go-zglob
+- package: github.com/ncw/swift
+- package: github.com/urfave/cli

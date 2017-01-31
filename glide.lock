@@ -1,0 +1,16 @@
+hash: 1ade712f505b0a2f63675b3f80d2d085334ec66d5ee896576a8f7337ec03a051
+updated: 2017-02-01T00:45:05.472837433+03:00
+imports:
+- name: github.com/joho/godotenv
+  version: 726cc8b906e3d31c70a9671c90a13716a8d3f50d
+  subpackages:
+  - autoload
+- name: github.com/mattn/go-zglob
+  version: 95345c4e1c0ebc9d16a3284177f09360f4d20fab
+  subpackages:
+  - fastwalk
+- name: github.com/ncw/swift
+  version: 6c1b1510538e1f00d49a558b7b9b87d71bc454d6
+- name: github.com/urfave/cli
+  version: 347a9884a87374d000eec7e6445a34487c1f4a2b
+testImports: []

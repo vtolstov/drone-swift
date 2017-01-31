@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-  "time"
-	log "github.com/Sirupsen/logrus"
+	"time"
+
 	"github.com/mattn/go-zglob"
 	"github.com/ncw/swift"
 )
@@ -52,10 +52,10 @@ func (p *Plugin) Exec() error {
 
 	// create the client
 	conn := &swift.Connection{
-		UserName: p.Key,
-		ApiKey:   p.Secret,
-		AuthUrl:  p.Endpoint,
-    AuthVersion: p.AuthVersion,
+		UserName:    p.Key,
+		ApiKey:      p.Secret,
+		AuthUrl:     p.Endpoint,
+		AuthVersion: p.AuthVersion,
 	}
 
 	if p.AuthVersion > 1 {
@@ -63,35 +63,17 @@ func (p *Plugin) Exec() error {
 		conn.Tenant = p.Tenant
 	}
 
-  if td, err := time.ParseDuration(p.Timeout); err == nil {
-    conn.ConnectTimeout = td
-    conn.Timeout = td
-  }
+	if td, err := time.ParseDuration(p.Timeout); err == nil {
+		conn.ConnectTimeout = td
+		conn.Timeout = td
+	}
 
-	log.WithFields(log.Fields{
-    "auth-url": p.Endpoint,
-    "auth-version":    p.AuthVersion,
-  }).Info("Attempting to auth")
-
-	err := conn.Authenticate()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Could not auth")
+	if err := conn.Authenticate(); err != nil {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"region":    p.Region,
-		"endpoint":  p.Endpoint,
-		"container": p.Container,
-	}).Info("Attempting to upload")
-
 	matches, err := matches(p.Source, p.Exclude)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Could not match files")
 		return err
 	}
 
@@ -108,19 +90,11 @@ func (p *Plugin) Exec() error {
 		}
 
 		target := filepath.Join(p.Target, strings.TrimPrefix(match, p.StripPrefix))
-    //if !strings.HasPrefix(target, "/") {
+		//if !strings.HasPrefix(target, "/") {
 		//	target = "/" + target
 		//}
 
 		content := contentType(match)
-
-		// log file for debug purposes.
-		log.WithFields(log.Fields{
-			"name":         match,
-			"container":    p.Container,
-			"target":       target,
-			"content-type": content,
-		}).Info("Uploading file")
 
 		// when executing a dry-run we exit because we don't actually want to
 		// upload the file to swift.
@@ -130,40 +104,18 @@ func (p *Plugin) Exec() error {
 
 		fr, err := os.Open(match)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-				"file":  match,
-			}).Error("Problem opening file")
 			return err
 		}
 		defer fr.Close()
 
 		fw, err := conn.ObjectCreate(p.Container, target, false, "", content, nil)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"name":      match,
-				"container": p.Container,
-				"target":    target,
-				"error":     err,
-			}).Error("Could not upload file")
 			return err
 		}
 		if _, err = io.Copy(fw, fr); err != nil {
-			log.WithFields(log.Fields{
-				"name":      match,
-				"container": p.Container,
-				"target":    target,
-				"error":     err,
-			}).Error("Could not upload file")
 			return err
 		}
 		if err = fw.Close(); err != nil {
-			log.WithFields(log.Fields{
-				"name":      match,
-				"container": p.Container,
-				"target":    target,
-				"error":     err,
-			}).Error("Could not upload file")
 			return err
 		}
 

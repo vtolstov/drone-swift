@@ -724,6 +724,11 @@ func TestObjectCreate(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		fmt.Fprintf(out2, "%d %s\n", i, CONTENTS)
 	}
+	// Ensure Headers fails if called prematurely
+	_, err = out.Headers()
+	if err == nil {
+		t.Error("Headers should fail if called before Close()")
+	}
 	err = out.Close()
 	if err != nil {
 		t.Error(err)
@@ -735,6 +740,15 @@ func TestObjectCreate(t *testing.T) {
 	}
 	if contents != expected {
 		t.Error("Contents wrong")
+	}
+
+	// Ensure Headers succeeds when called after a good upload
+	headers, err := out.Headers()
+	if err != nil {
+		t.Error(err)
+	}
+	if len(headers) < 1 {
+		t.Error("The Headers returned by Headers() should not be empty")
 	}
 
 	// Test writing on closed file
@@ -926,6 +940,49 @@ func TestObjectOpenSeek(t *testing.T) {
 	err = file.Close()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Test seeking to the end to find the file size
+func TestObjectOpenSeekEnd(t *testing.T) {
+	file, _, err := c.ObjectOpen(CONTAINER, OBJECT, true, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n, err := file.Seek(0, 2) // seek to end
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != CONTENT_SIZE {
+		t.Fatal("Wrong offset", n)
+	}
+
+	// Now check reading returns EOF
+	buf := make([]byte, 16)
+	nn, err := io.ReadFull(file, buf)
+	if err != io.EOF {
+		t.Fatal(err)
+	}
+	if nn != 0 {
+		t.Fatal("wrong length", n)
+	}
+
+	// Now seek back to start and check we can read the file
+	n, err = file.Seek(0, 0) // seek to start
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatal("Wrong offset", n)
+	}
+
+	// read file and check contents
+	buf, err = ioutil.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(buf) != CONTENTS {
+		t.Fatal("wrong contents", string(buf))
 	}
 }
 
