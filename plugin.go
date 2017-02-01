@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/mattn/go-zglob"
 	"github.com/ncw/swift"
 )
@@ -77,7 +78,7 @@ func (p *Plugin) Exec() error {
 		return err
 	}
 
-	log.WithFields(log.Fields{
+	logrus.WithFields(logrus.Fields{
 		"region":    p.Region,
 		"endpoint":  p.Endpoint,
 		"container": p.Container,
@@ -103,7 +104,7 @@ func (p *Plugin) Exec() error {
 		content := contentType(match)
 
 		// log file for debug purposes.
-		log.WithFields(log.Fields{
+		logrus.WithFields(logrus.Fields{
 			"name":         match,
 			"container":    p.Container,
 			"target":       target,
