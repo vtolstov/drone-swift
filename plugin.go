@@ -77,6 +77,12 @@ func (p *Plugin) Exec() error {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"region":    p.Region,
+		"endpoint":  p.Endpoint,
+		"container": p.Container,
+	}).Info("Attempting to upload")
+
 	for _, match := range matches {
 
 		stat, err := os.Stat(match)
@@ -95,6 +101,14 @@ func (p *Plugin) Exec() error {
 		//}
 
 		content := contentType(match)
+
+		// log file for debug purposes.
+		log.WithFields(log.Fields{
+			"name":         match,
+			"container":    p.Container,
+			"target":       target,
+			"content-type": content,
+		}).Info("Uploading file")
 
 		// when executing a dry-run we exit because we don't actually want to
 		// upload the file to swift.

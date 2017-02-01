@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/joho/godotenv"
-	_ "github.com/joho/godotenv/autoload"
 	"github.com/urfave/cli"
 )
 
@@ -13,6 +13,10 @@ import (
 var Version string
 
 func main() {
+	if env := os.Getenv("PLUGIN_ENV_FILE"); env != "" {
+		godotenv.Load(env)
+	}
+
 	app := cli.NewApp()
 	app.Name = "swift artifact plugin"
 	app.Usage = "swift artifact plugin"
@@ -89,19 +93,13 @@ func main() {
 			Usage:  "dry run for debug purposes",
 			EnvVar: "PLUGIN_DRY_RUN",
 		},
-		cli.StringFlag{
-			Name:   "env-file",
-			Usage:  "source env file",
-			EnvVar: "ENV_FILE",
-		},
 	}
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		logrus.Fatal(err)
+	}
 }
 
 func run(c *cli.Context) error {
-	if c.String("env-file") != "" {
-		_ = godotenv.Load(c.String("env-file"))
-	}
 
 	plugin := &Plugin{
 		Endpoint:    c.String("endpoint"),
