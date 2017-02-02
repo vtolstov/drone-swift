@@ -2,13 +2,13 @@ package main
 
 import (
 	"io"
-	"mime"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/h2non/filetype"
 	"github.com/mattn/go-zglob"
 	"github.com/ncw/swift"
 )
@@ -35,17 +35,16 @@ type Plugin struct {
 	Source string
 	Target string
 
+	//Exclude path
+	Exclude []string
+
 	// Strip the prefix from the target path
 	StripPrefix string
 
-	// Recursive uploads
-	Recursive bool
-
-	// Exclude files matching this pattern.
-	Exclude []string
-
 	// Dry run without uploading/
 	DryRun bool
+
+	conn *swift.Connection
 }
 
 // Exec runs the plugin
@@ -65,7 +64,6 @@ func (p *Plugin) Exec() error {
 	}
 
 	if td, err := time.ParseDuration(p.Timeout); err == nil {
-		conn.ConnectTimeout = td
 		conn.Timeout = td
 	}
 
@@ -73,70 +71,67 @@ func (p *Plugin) Exec() error {
 		return err
 	}
 
-	matches, err := matches(p.Source, p.Exclude)
-	if err != nil {
-		return err
-	}
-
+	p.conn = conn
 	logrus.WithFields(logrus.Fields{
 		"region":    p.Region,
 		"endpoint":  p.Endpoint,
 		"container": p.Container,
+		"path":      p.Target,
 	}).Info("Attempting to upload")
 
-	for _, match := range matches {
+	return filepath.Walk(p.Source, p.walk())
 
-		stat, err := os.Stat(match)
-		if err != nil {
-			continue // should never happen
-		}
+}
 
-		// skip directories
-		if stat.IsDir() {
-			continue
-		}
-
-		target := filepath.Join(p.Target, strings.TrimPrefix(match, p.StripPrefix))
-		//if !strings.HasPrefix(target, "/") {
-		//	target = "/" + target
-		//}
-
-		content := contentType(match)
-
-		// log file for debug purposes.
-		logrus.WithFields(logrus.Fields{
-			"name":         match,
-			"container":    p.Container,
-			"target":       target,
-			"content-type": content,
-		}).Info("Uploading file")
-
-		// when executing a dry-run we exit because we don't actually want to
-		// upload the file to swift.
-		if p.DryRun {
-			continue
-		}
-
-		fr, err := os.Open(match)
+func (p *Plugin) walk() filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		defer fr.Close()
-
-		fw, err := conn.ObjectCreate(p.Container, target, false, "", content, nil)
-		if err != nil {
-			return err
-		}
-		if _, err = io.Copy(fw, fr); err != nil {
-			return err
-		}
-		if err = fw.Close(); err != nil {
-			return err
+		if info.IsDir() {
+			return nil
 		}
 
-		fr.Close()
+		p.uploadFile(path)
+		return nil
+	}
+}
+
+// uploadFile is the helper function to upload file
+func (p *Plugin) uploadFile(source string) error {
+	content := contentType(source)
+
+	target := filepath.Join(p.Target, strings.TrimPrefix(source, p.StripPrefix))
+	// log file for debug purposes.
+	logrus.WithFields(logrus.Fields{
+		"source":       source,
+		"container":    p.Container,
+		"target":       target,
+		"content-type": content,
+	}).Info("Uploading file")
+
+	// when executing a dry-run we exit because we don't actually want to
+	// upload the file to swift.
+	if p.DryRun {
+		return nil
 	}
 
+	fr, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer fr.Close()
+
+	fw, err := p.conn.ObjectCreate(p.Container, target, false, "", content, nil)
+	if err != nil {
+		return err
+	}
+	if _, err = io.Copy(fw, fr); err != nil {
+		return err
+	}
+	if err = fw.Close(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -188,10 +183,18 @@ func matches(include string, exclude []string) ([]string, error) {
 // based on extension. If the file extension is unknown application/octet-stream
 // is returned.
 func contentType(path string) string {
-	ext := filepath.Ext(path)
-	typ := mime.TypeByExtension(ext)
-	if typ == "" {
-		typ = "application/octet-stream"
+	ftype := "application/octet-stream"
+	r, err := os.Open(path)
+	if err != nil {
+		return ftype
 	}
-	return typ
+	defer r.Close()
+	dtype, err := filetype.MatchReader(r)
+	if err != nil {
+		return ftype
+	}
+	if dtype.MIME.Type == "" && dtype.MIME.Value == "" {
+		return ftype
+	}
+	return dtype.MIME.Value
 }

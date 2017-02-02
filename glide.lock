@@ -1,6 +1,8 @@
 hash: 1ade712f505b0a2f63675b3f80d2d085334ec66d5ee896576a8f7337ec03a051
-updated: 2017-02-01T12:57:06.462446026+03:00
+updated: 2017-02-02T15:44:39.332335381+03:00
 imports:
+- name: github.com/h2non/filetype
+  version: 259d9d2c52bc90dbd7e1999f9da86ee0d104d0ff
 - name: github.com/joho/godotenv
   version: 726cc8b906e3d31c70a9671c90a13716a8d3f50d
   subpackages:
@@ -19,4 +21,9 @@ imports:
   version: 7a6e5648d140666db5d920909e082ca00a87ba2c
   subpackages:
   - unix
+- name: gopkg.in/h2non/filetype.v1
+  version: e42395618f967c7925230905a29e63e787e88be6
+  subpackages:
+  - matchers
+  - types
 testImports: []

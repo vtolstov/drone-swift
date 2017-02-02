@@ -78,11 +78,6 @@ func main() {
 			Usage:  "strip the prefix from the target",
 			EnvVar: "PLUGIN_STRIP_PREFIX,SWIFT_STRIP_PREFIX",
 		},
-		cli.BoolFlag{
-			Name:   "recursive",
-			Usage:  "upload files recursively",
-			EnvVar: "PLUGIN_RECURSIVE,SWIFT_RECURSIVE",
-		},
 		cli.StringSliceFlag{
 			Name:   "exclude",
 			Usage:  "ignore files matching exclude pattern",
@@ -113,7 +108,6 @@ func run(c *cli.Context) error {
 		Source:      c.String("source"),
 		Target:      c.String("target"),
 		StripPrefix: c.String("strip-prefix"),
-		Recursive:   c.Bool("recursive"),
 		Exclude:     c.StringSlice("exclude"),
 		DryRun:      c.Bool("dry-run"),
 	}
