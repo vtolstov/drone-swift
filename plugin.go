@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"mime"
 	"os"
 	"path/filepath"
 	"strings"
@@ -79,8 +80,17 @@ func (p *Plugin) Exec() error {
 		"path":      p.Target,
 	}).Info("Attempting to upload")
 
-	return filepath.Walk(p.Source, p.walk())
+	sources, err := matches(p.Source, p.Exclude)
+	if err != nil {
+		return err
+	}
 
+	for _, source := range sources {
+		if err = filepath.Walk(source, p.walk()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *Plugin) walk() filepath.WalkFunc {
@@ -193,8 +203,12 @@ func contentType(path string) string {
 	if err != nil {
 		return ftype
 	}
-	if dtype.MIME.Type == "" && dtype.MIME.Value == "" {
+	if dtype.MIME.Type != "" && dtype.MIME.Value != "" {
+		return dtype.MIME.Value
+	}
+	ext := filepath.Ext(path)
+	if ftype := mime.TypeByExtension(ext); ftype != "" {
 		return ftype
 	}
-	return dtype.MIME.Value
+	return "application/octet-stream"
 }
